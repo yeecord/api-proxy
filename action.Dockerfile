@@ -12,6 +12,8 @@ RUN bun install --frozen-lockfile --production
 
 FROM base AS runner
 
+WORKDIR /app
+
 # Install curl for healthcheck
 RUN apk update && apk add curl --no-cache
 

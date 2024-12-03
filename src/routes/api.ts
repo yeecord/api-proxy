@@ -1,5 +1,6 @@
 import {
   createCacheKey,
+  createCacheKeyFromRequest,
   createResponseFromCached,
   getCachedResponse,
   setCachedResponse,
@@ -18,7 +19,7 @@ export async function handleApiRequest(request: Request, url: URL) {
     return fetchFromRequest(url, request);
   }
 
-  const cacheKey = createCacheKey(request);
+  const cacheKey = createCacheKeyFromRequest(request);
 
   const existingCache = getCachedResponse(cacheKey);
 

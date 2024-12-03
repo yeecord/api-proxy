@@ -40,6 +40,10 @@ const setCachedQuery = db.prepare<
   VALUES ($key, $body, $status, $contentType, strftime('%s', 'now'))
 `);
 
+const deleteCachedQuery = db.prepare<undefined, CachedResponse["key"]>(
+  `DELETE FROM cache WHERE key = ?`
+);
+
 export function getCachedResponse(cacheKey: bigint) {
   return getCachedQuery.get(cacheKey);
 }
@@ -50,10 +54,22 @@ export function setCachedResponse(
   return setCachedQuery.run(cachedResponse);
 }
 
-export function createCacheKey(request: Request) {
+export function createCacheKey(params: {
+  method: string;
+  url: string;
+  authorization?: string;
+}) {
   return hasher.h64(
-    `${request.method} ${request.url} ${request.headers.get("Authorization")}`
+    `${params.method}:${params.url}:${params.authorization ?? ""}`
   );
+}
+
+export function createCacheKeyFromRequest(request: Request) {
+  return createCacheKey({
+    method: request.method,
+    url: request.url,
+    authorization: request.headers.get("Authorization") ?? undefined,
+  });
 }
 
 export function createResponseFromCached(
@@ -65,4 +81,8 @@ export function createResponseFromCached(
     },
     status: cached.status,
   });
+}
+
+export function invalidateCache(cacheKey: bigint) {
+  return deleteCachedQuery.run(cacheKey);
 }
