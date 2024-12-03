@@ -65,7 +65,7 @@ function fetchFromRequest(url: URL, request: Request) {
   return fetch(url, {
     method: request.method,
     headers: request.headers,
-    body: request.body,
+    body: request.method !== "GET" ? request.body : undefined,
     signal: AbortSignal.timeout(10_000),
   });
 }
