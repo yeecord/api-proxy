@@ -15,10 +15,8 @@ export async function handleApiRequest(request: Request, url: URL) {
   request.headers.set("Host", "discord.com");
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return fetch(url.toString(), {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
+    return fetch(url, {
+      ...request,
       signal: AbortSignal.timeout(10_000),
     });
   }
@@ -47,10 +45,9 @@ export async function handleApiRequest(request: Request, url: URL) {
 }
 
 async function makeRequest(cacheKey: bigint, url: URL, request: Request) {
-  const response = await fetch(url.toString(), {
-    method: request.method,
-    headers: request.headers,
-    body: request.body,
+  const response = await fetch(url, {
+    ...request,
+    signal: AbortSignal.timeout(10_000),
   });
 
   const content =
