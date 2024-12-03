@@ -1,0 +1,44 @@
+name: Docker Build
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  contents: write
+
+env:
+  IMAGE_TAG: ghcr.io/yeecord/api-proxy:latest
+  BUN_VERSION: 1.1.38
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: action.Dockerfile
+          build-args: |
+            BUN_VERSION=${{ env.BUN_VERSION }}
+          secrets: |
+            "NPM_TOKEN=${{ secrets.GITHUB_TOKEN }}"

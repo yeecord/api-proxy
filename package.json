@@ -1,0 +1,17 @@
+{
+  "name": "api-proxy",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "^1.1.14"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "file-system-cache": "^3.0.0-alpha.8"
+  }
+}
