@@ -15,10 +15,7 @@ export async function handleApiRequest(request: Request, url: URL) {
   request.headers.set("Host", "discord.com");
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return fetch(url, {
-      ...request,
-      signal: AbortSignal.timeout(10_000),
-    });
+    return Response.redirect(url.toString(), 308);
   }
 
   const cacheKey = createCacheKey(request);
