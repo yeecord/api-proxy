@@ -1,9 +1,11 @@
-import { cache, createCacheKey } from "../utils";
+import {
+  createCacheKey,
+  createResponseFromCached,
+  getCachedResponse,
+  setCachedResponse,
+} from "../cache";
 
-interface CachedResponse {
-  headers: [string, string][];
-  body: string | null;
-}
+const requestMap = new Map<bigint, Promise<Response>>();
 
 export async function handleApiRequest(request: Request, url: URL) {
   url.hostname = "discord.com";
@@ -12,7 +14,7 @@ export async function handleApiRequest(request: Request, url: URL) {
 
   request.headers.set("Host", "discord.com");
 
-  if (request.method !== "GET") {
+  if (request.method !== "GET" && request.method !== "HEAD") {
     return fetch(url.toString(), {
       method: request.method,
       headers: request.headers,
@@ -22,28 +24,47 @@ export async function handleApiRequest(request: Request, url: URL) {
 
   const cacheKey = createCacheKey(request);
 
-  const existing = (await cache.get(cacheKey)) as CachedResponse | undefined;
+  const existingCache = getCachedResponse(cacheKey);
 
-  if (existing) {
-    return new Response(existing.body, {
-      headers: new Headers(existing.headers),
-    });
+  if (existingCache) {
+    return createResponseFromCached(existingCache);
   }
 
+  const existingRequest = requestMap.get(cacheKey);
+
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const promise = makeRequest(cacheKey, url, request).finally(() => {
+    requestMap.delete(cacheKey);
+  });
+
+  requestMap.set(cacheKey, promise);
+
+  return promise;
+}
+
+async function makeRequest(cacheKey: bigint, url: URL, request: Request) {
   const response = await fetch(url.toString(), {
     method: request.method,
     headers: request.headers,
     body: request.body,
   });
 
-  const content = response.status === 204 ? null : await response.text();
+  const content =
+    response.status === 204
+      ? undefined
+      : new Uint8Array(await response.arrayBuffer());
 
-  await cache.set(cacheKey, {
-    headers: [...response.headers.entries()],
+  const cachedResponse = {
+    key: cacheKey,
     body: content,
-  } satisfies CachedResponse);
+    contentType: response.headers.get("Content-Type") ?? undefined,
+    status: response.status,
+  };
 
-  return new Response(content, {
-    headers: response.headers,
-  });
+  setCachedResponse(cachedResponse);
+
+  return createResponseFromCached(cachedResponse);
 }

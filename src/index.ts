@@ -1,6 +1,6 @@
 import { handleApiRequest } from "./routes/api";
 
-Bun.serve({
+const server = Bun.serve({
   fetch(request) {
     const url = new URL(request.url);
 
@@ -10,5 +10,6 @@ Bun.serve({
 
     return new Response("Not found", { status: 404 });
   },
-  port: 3000,
 });
+
+console.log(`Listening on :${server.port}`);
