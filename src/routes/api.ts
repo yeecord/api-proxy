@@ -43,7 +43,9 @@ export async function handleApiRequest(request: Request, url: URL) {
 
 async function makeRequest(cacheKey: bigint, url: URL, request: Request) {
   const response = await fetch(url, {
-    ...request,
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
     signal: AbortSignal.timeout(10_000),
   });
 
