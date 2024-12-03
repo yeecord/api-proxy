@@ -15,7 +15,7 @@ export async function handleApiRequest(request: Request, url: URL) {
   request.headers.set("Host", "discord.com");
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return Response.redirect(url.toString(), 308);
+    return fetchFromRequest(url, request);
   }
 
   const cacheKey = createCacheKey(request);
@@ -42,12 +42,7 @@ export async function handleApiRequest(request: Request, url: URL) {
 }
 
 async function makeRequest(cacheKey: bigint, url: URL, request: Request) {
-  const response = await fetch(url, {
-    method: request.method,
-    headers: request.headers,
-    body: request.body,
-    signal: AbortSignal.timeout(10_000),
-  });
+  const response = await fetchFromRequest(url, request);
 
   const content =
     response.status === 204
@@ -64,4 +59,13 @@ async function makeRequest(cacheKey: bigint, url: URL, request: Request) {
   setCachedResponse(cachedResponse);
 
   return createResponseFromCached(cachedResponse);
+}
+
+function fetchFromRequest(url: URL, request: Request) {
+  return fetch(url, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    signal: AbortSignal.timeout(10_000),
+  });
 }
