@@ -20,4 +20,6 @@ COPY . .
 
 ENTRYPOINT ["bun", "run"]
 
+ENV PORT=80
+
 CMD ["start"]
