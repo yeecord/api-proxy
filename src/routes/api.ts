@@ -19,6 +19,7 @@ export async function handleApiRequest(request: Request, url: URL) {
       method: request.method,
       headers: request.headers,
       body: request.body,
+      signal: AbortSignal.timeout(10_000),
     });
   }
 
